@@ -145,7 +145,7 @@ def extract_channel_data(items, collect_time):
     return rows
 
 
-def append_to_google_sheets(video_rows, channel_rows, spreadsheet_id, credentials_b64):
+def append_to_google_sheets(video_rows, channel_rows, spreadsheet_id, credentials_b64, collect_time):
     """Google Sheets에 데이터 추가. 실패해도 CSV 저장에 영향 없음."""
     import gspread
     from google.oauth2.service_account import Credentials
@@ -159,11 +159,14 @@ def append_to_google_sheets(video_rows, channel_rows, spreadsheet_id, credential
     gc = gspread.authorize(credentials)
     sh = gc.open_by_key(spreadsheet_id)
 
-    # --- trending_log 탭: append ---
+    # --- trending_log 월별 탭: append ---
+    month_str = collect_time[:7].replace('-', '')  # "20260227T..." -> "202602"
+    tab_name = f'trending_log_{month_str}'
+
     try:
-        ws_trending = sh.worksheet('trending_log')
+        ws_trending = sh.worksheet(tab_name)
     except gspread.exceptions.WorksheetNotFound:
-        ws_trending = sh.add_worksheet(title='trending_log', rows=1000, cols=30)
+        ws_trending = sh.add_worksheet(title=tab_name, rows=1000, cols=30)
 
     if video_rows:
         headers = list(video_rows[0].keys())
@@ -171,7 +174,7 @@ def append_to_google_sheets(video_rows, channel_rows, spreadsheet_id, credential
             ws_trending.append_row(headers, value_input_option='RAW')
         rows = [[str(row.get(h, '')) for h in headers] for row in video_rows]
         ws_trending.append_rows(rows, value_input_option='RAW')
-        print(f"  Sheets trending_log: {len(rows)}행 추가")
+        print(f"  Sheets {tab_name}: {len(rows)}행 추가")
 
     # --- channels 탭: upsert ---
     try:
@@ -275,7 +278,7 @@ def main():
         sheet_id = os.environ.get('GOOGLE_SHEET_ID')
         if sheets_creds and sheet_id:
             try:
-                append_to_google_sheets(video_rows, channel_rows, sheet_id, sheets_creds)
+                append_to_google_sheets(video_rows, channel_rows, sheet_id, sheets_creds, collect_time)
                 log_lines.append(f"[{collect_time}] Sheets 업데이트 성공")
             except Exception as e:
                 print(f"Sheets 업데이트 실패 (비치명적): {e}")
