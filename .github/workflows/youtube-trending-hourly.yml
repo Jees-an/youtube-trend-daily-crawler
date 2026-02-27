@@ -1,0 +1,41 @@
+name: 'YouTube Trending Hourly'
+
+on:
+  schedule:
+    - cron: '5 * * * *'   # 매시간 5분 (기존 워크플로우와 겹치지 않게)
+  workflow_dispatch:
+
+jobs:
+  collect_trending:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade packaging
+          pip install -r requirements.txt
+          pip check
+
+      - name: Run collect_trending.py
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: |
+          python collect_trending.py
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: trending-hourly-${{ github.run_number }}
+          path: output/
+          retention-days: 30
+          compression-level: 9
