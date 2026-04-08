@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /c/Users/user/Documents/GitHub/youtube-daily-crawler && gh run list --limit 5 2>&1)",
+      "Bash(tail:*)",
+      "Bash(cd /c/Users/user/Documents/GitHub/youtube-daily-crawler && gh api repos/{owner}/{repo}/actions/artifacts --jq '.total_count' 2>&1)",
+      "Bash(cd /c/Users/user/Documents/GitHub/youtube-daily-crawler && gh api \"repos/{owner}/{repo}/actions/artifacts?per_page=1&page=991\" --jq '.artifacts[] | {name, created_at, expires_at, expired}' 2>&1)",
+      "Bash(cd /c/Users/user/Documents/GitHub/youtube-daily-crawler && gh api \"repos/{owner}/{repo}/actions/artifacts?per_page=100\" --jq '[.artifacts[] | select\\(.expired == false\\)] | last | {name, created_at, expires_at, expired}' 2>&1)",
+      "Bash(cd /c/Users/user/Documents/GitHub/youtube-daily-crawler && gh api \"repos/{owner}/{repo}/actions/artifacts?per_page=100\" --paginate --jq '[.artifacts[] | select\\(.expired == false\\)] | last | {name, created_at, expires_at}' 2>&1)",
+      "Bash(cd:*)",
+      "Bash(find:*)",
+      "Bash(base64:*)",
+      "Bash(cd /c/Users/user/Documents/GitHub/youtube-daily-crawler && gh run watch --exit-status 22485476791 2>&1)",
+      "Bash(cd /c/Users/user/Documents/GitHub/youtube-daily-crawler && gh run watch --exit-status 22485579289 2>&1)"
+    ]
+  }
+}
