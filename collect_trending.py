@@ -212,6 +212,47 @@ def append_to_google_sheets(video_rows, channel_rows, spreadsheet_id, credential
         updated = len(channel_rows) - len(new_rows)
         print(f"  Sheets channels: {len(new_rows)}개 신규, {updated}개 업데이트")
 
+    check_sheet_capacity_and_alert(sh)
+
+
+def check_sheet_capacity_and_alert(sh):
+    """Sheet 사용량 점검. 70/80/90% 첫 돌파 시 SystemExit → 워크플로우 fail → GitHub 이메일 알림."""
+    import gspread
+
+    THRESHOLDS = [70, 80, 90]
+    LIMIT = 10_000_000  # Google Sheets 한 spreadsheet 셀 한도
+
+    meta = sh.fetch_sheet_metadata()
+    total = sum(
+        s.get('properties', {}).get('gridProperties', {}).get('rowCount', 0) *
+        s.get('properties', {}).get('gridProperties', {}).get('columnCount', 0)
+        for s in meta.get('sheets', [])
+    )
+    pct = total * 100 / LIMIT
+
+    try:
+        ws_meta = sh.worksheet('_meta')
+    except gspread.exceptions.WorksheetNotFound:
+        ws_meta = sh.add_worksheet(title='_meta', rows=2, cols=2)
+        ws_meta.update('A1:B1', [['last_alerted_threshold', '0']])
+
+    try:
+        last = int(ws_meta.acell('B1').value or 0)
+    except (ValueError, TypeError):
+        last = 0
+
+    print(f"  Sheets 사용량: {total:,} cells ({pct:.1f}%, 마지막 알림 {last}%)")
+
+    # spreadsheet 교체 등으로 사용량이 떨어지면 카운터 리셋
+    if pct < min(THRESHOLDS) and last > 0:
+        ws_meta.update('B1', [['0']])
+        return
+
+    crossed = max((t for t in THRESHOLDS if pct >= t and last < t), default=None)
+    if crossed is not None:
+        ws_meta.update('B1', [[str(crossed)]])
+        raise SystemExit(f"⚠️ Google Sheet 사용량 {pct:.1f}% — {crossed}% 임계 돌파. 새 spreadsheet 준비 필요.")
+
 
 def main():
     API_KEY = os.environ.get('YOUTUBE_API_KEY')
