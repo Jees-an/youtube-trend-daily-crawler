@@ -1,0 +1,24 @@
+# Claude
+.claude/
+CLAUDE.md
+.claude.json
+
+# Credentials
+creds/
+*.json.key
+service_account*.json
+google_service_account*.json
+*credentials*.json
+.env
+.env.*
+
+# Python
+*.pyc
+__pycache__/
+*.egg-info/
+
+# Output
+output/
+
+# Local scripts (personal)
+scripts/
