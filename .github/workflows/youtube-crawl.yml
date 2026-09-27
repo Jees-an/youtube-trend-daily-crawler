@@ -40,3 +40,16 @@ jobs:
           path: output/
           retention-days: 90
           compression-level: 9
+
+  # 60일 비활성 자동 중지 방지: 예약 워크플로를 다시 enable 하면 타이머가 초기화된다.
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Re-enable scheduled workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X PUT "repos/${{ github.repository }}/actions/workflows/youtube-crawl.yml/enable"
+          gh api -X PUT "repos/${{ github.repository }}/actions/workflows/youtube-trending-hourly.yml/enable"
