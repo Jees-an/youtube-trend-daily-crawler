@@ -37,5 +37,5 @@ jobs:
         with:
           name: trending-hourly-${{ github.run_number }}
           path: output/
-          retention-days: 30
+          retention-days: 90
           compression-level: 9

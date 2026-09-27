@@ -38,5 +38,5 @@ jobs:
         with:
           name: youtube-output-${{ github.run_number }}
           path: output/
-          retention-days: 60
+          retention-days: 90
           compression-level: 9
